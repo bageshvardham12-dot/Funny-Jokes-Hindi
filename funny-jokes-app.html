@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funny Jokes Hindi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .glass { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .btn-premium { @apply px-4 py-2 rounded-2xl shadow-lg text-white font-semibold transition transform hover:scale-105; }
+    .card-premium { @apply glass p-4 rounded-2xl shadow-xl mb-4; }
+    .hidden { display: none; }
+    .tbl th, .tbl td { @apply border border-white/20 p-2 text-sm; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-900 via-black to-gray-900 text-white">
+  <header class="text-center py-4 select-none">
+    <h1 id="appTitle" class="text-3xl font-bold tracking-wide cursor-pointer">Funny Jokes Hindi</h1>
+    <p class="text-xs opacity-70">(Admin खोलने के लिए ऊपर title पर 5 बार tap करें)</p>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="flex justify-around py-2 glass rounded-xl mx-2 mb-4 text-sm">
+    <button onclick="showSection('home')">🏠 Home</button>
+    <button onclick="showSection('createJoke')">✍️ Create</button>
+    <button onclick="showSection('uploadImage')">🖼 Upload</button>
+    <button onclick="showSection('wallet')">💰 Wallet</button>
+    <button onclick="showSection('profile')">👤 Profile</button>
+  </nav>
+
+  <!-- Sections -->
+  <main class="px-4">
+    <section id="home" class="section">
+      <h2 class="text-xl font-semibold mb-3">😂 मजेदार जोक्स</h2>
+      <div id="jokesList"></div>
+    </section>
+
+    <section id="createJoke" class="section hidden">
+      <div class="card-premium">
+        <h2 class="text-xl font-semibold mb-2">✍️ नया जोक लिखें</h2>
+        <textarea id="jokeText" class="w-full p-2 rounded-xl text-black" rows="3" placeholder="अपना जोक लिखें..."></textarea>
+        <button onclick="submitJoke()" class="btn-premium bg-purple-600 mt-3 w-full">Submit</button>
+      </div>
+    </section>
+
+    <section id="uploadImage" class="section hidden">
+      <div class="card-premium">
+        <h2 class="text-xl font-semibold mb-2">🖼 जोक इमेज अपलोड करें</h2>
+        <input type="file" id="jokeImage" accept="image/*" class="mb-2" />
+        <input type="text" id="imageCaption" class="w-full p-2 rounded-xl text-black" placeholder="कैप्शन लिखें" />
+        <button onclick="submitImageJoke()" class="btn-premium bg-indigo-600 mt-3 w-full">Upload</button>
+      </div>
+    </section>
+
+    <section id="wallet" class="section hidden">
+      <div class="card-premium">
+        <h2 class="text-xl font-semibold mb-3">💰 Wallet</h2>
+        <p id="profileDisplay" class="mb-2"></p>
+        <p id="pointsDisplay" class="mb-2"></p>
+        <p id="inrDisplay" class="mb-2"></p>
+        <p id="dailyLimits" class="mb-2 text-sm opacity-80"></p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+          <input type="text" id="upiId" class="w-full p-2 rounded-xl text-black" placeholder="UPI ID" />
+          <input type="number" id="withdrawAmount" class="w-full p-2 rounded-xl text-black" placeholder="Amount (INR)" />
+        </div>
+        <button onclick="requestWithdraw()" class="btn-premium bg-green-600 w-full">Withdraw</button>
+        <h3 class="text-lg mt-3 mb-2 font-semibold">📜 Withdrawal Requests</h3>
+        <div id="withdrawList"></div>
+      </div>
+    </section>
+
+    <section id="profile" class="section hidden">
+      <div class="card-premium">
+        <h2 class="text-xl font-semibold mb-2">👤 Profile</h2>
+        <input type="text" id="userName" class="w-full p-2 rounded-xl text-black mb-2" placeholder="आपका नाम" />
+        <button onclick="saveProfile()" class="btn-premium bg-blue-600 w-full">Save</button>
+      </div>
+    </section>
+
+    <!-- Hidden Admin -->
+    <section id="adminPanel" class="section hidden">
+      <div class="card-premium">
+        <h2 class="text-2xl font-bold mb-3">⚙️ Admin Panel</h2>
+        <input type="password" id="adminPassword" class="w-full p-2 rounded-xl text-black mb-2" placeholder="Enter Password" />
+        <button onclick="checkAdminPassword()" class="btn-premium bg-red-600 w-full mb-3">Login</button>
+        <div id="adminContent" class="hidden">
+          <h3 class="text-lg font-semibold mb-2">Pending Jokes</h3>
+          <div class="overflow-auto">
+            <table class="tbl w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-white/10"><th>ID</th><th>Type</th><th>Content</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="pendingJokes"></tbody>
+            </table>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-2 mt-4">Withdrawal Requests</h3>
+          <div class="overflow-auto">
+            <table class="tbl w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-white/10"><th>ID</th><th>User</th><th>UPI</th><th>INR</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="pendingWithdrawals"></tbody>
+            </table>
+          </div>
+
+          <h3 class="text-lg font-semibold mt-4">Limit Controls</h3>
+          <div class="grid md:grid-cols-2 gap-2 mb-3">
+            <label>Likes per day: <input type="number" id="likeLimitInput" class="text-black p-1 rounded w-full" /></label>
+            <label>Shares per day: <input type="number" id="shareLimitInput" class="text-black p-1 rounded w-full" /></label>
+            <label>Coins per Like: <input type="number" id="coinPerLikeInput" class="text-black p-1 rounded w-full" /></label>
+            <label>Coins per Share: <input type="number" id="coinPerShareInput" class="text-black p-1 rounded w-full" /></label>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="saveAdminLimits()" class="btn-premium bg-green-600 w-full">Save Limits</button>
+            <button onclick="resetJokes()" class="btn-premium bg-red-700 w-full">Reset Jokes</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --------- STATE ---------
+    let user = { name: "", points: 0, likeCount: 0, shareCount: 0, lastActionDate: '' };
+    let jokes = JSON.parse(localStorage.getItem("jokes") || "[]");
+    let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+    let adminLimits = JSON.parse(localStorage.getItem("adminLimits") || '{"likeLimit":5,"shareLimit":5,"coinPerLike":1,"coinPerShare":2}');
+
+    // lifetime one-per-joke
+    let likedOnce = JSON.parse(localStorage.getItem('likedOnce') || '[]');
+    let sharedOnce = JSON.parse(localStorage.getItem('sharedOnce') || '[]');
+
+    // --------- HELPERS ---------
+    function persistUser(){ localStorage.setItem('user', JSON.stringify(user)); }
+    function persistJokes(){ localStorage.setItem('jokes', JSON.stringify(jokes)); }
+    function persistLiked(){ localStorage.setItem('likedOnce', JSON.stringify(likedOnce)); }
+    function persistShared(){ localStorage.setItem('sharedOnce', JSON.stringify(sharedOnce)); }
+
+    function ensureDailyReset(){
+      const today = new Date().toDateString();
+      if(user.lastActionDate !== today){
+        user.likeCount = 0; user.shareCount = 0; user.lastActionDate = today; persistUser();
+      }
+    }
+
+    function nextJokeId(){ return (jokes.length ? Math.max(...jokes.map(j=>j.id||0)) : 0) + 1; }
+
+    // --------- NAV ---------
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(section => section.classList.add('hidden'));
+      const activeSection = document.getElementById(sectionId);
+      if (activeSection) activeSection.classList.remove('hidden');
+      if(sectionId==='home') renderJokes();
+      if(sectionId==='wallet'){ updateWallet(); showWithdrawals(); }
+      if(sectionId==='profile') renderProfile();
+    }
+
+    // Hidden admin via 5 taps
+    let tapCount = 0;
+    document.getElementById("appTitle").addEventListener("click", () => {
+      tapCount++;
+      if (tapCount >= 5) { tapCount = 0; showSection('adminPanel'); }
+      setTimeout(()=> tapCount=0, 1500);
+    });
+
+    function checkAdminPassword() {
+      const password = document.getElementById("adminPassword").value;
+      if (password === "885816") {
+        document.getElementById("adminContent").classList.remove("hidden");
+        document.getElementById("likeLimitInput").value = adminLimits.likeLimit;
+        document.getElementById("shareLimitInput").value = adminLimits.shareLimit;
+        document.getElementById("coinPerLikeInput").value = adminLimits.coinPerLike;
+        document.getElementById("coinPerShareInput").value = adminLimits.coinPerShare;
+        renderAdminTables();
+      } else { alert("गलत पासवर्ड!"); }
+    }
+
+    function saveAdminLimits(){
+      adminLimits.likeLimit = parseInt(document.getElementById("likeLimitInput").value || 0) || 0;
+      adminLimits.shareLimit = parseInt(document.getElementById("shareLimitInput").value || 0) || 0;
+      adminLimits.coinPerLike = parseInt(document.getElementById("coinPerLikeInput").value || 0) || 0;
+      adminLimits.coinPerShare = parseInt(document.getElementById("coinPerShareInput").value || 0) || 0;
+      localStorage.setItem("adminLimits", JSON.stringify(adminLimits));
+      alert("Limits Saved");
+      updateWallet();
+    }
+
+    // --------- CREATE / UPLOAD ---------
+    function submitJoke(){
+      const text = (document.getElementById('jokeText').value||'').trim();
+      if(!text){ alert('जोक लिखें'); return; }
+      const j = { id: nextJokeId(), type:'text', text, status:'pending', likes:0, shares:0, createdAt: Date.now(), author: user.name||'User' };
+      jokes.push(j); persistJokes();
+      document.getElementById('jokeText').value='';
+      alert('Joke submitted for approval');
+      showSection('home');
+      renderAdminTables();
+    }
+
+    // Implemented to fix the crash
+    function submitImageJoke(){
+      const file = document.getElementById('jokeImage').files[0];
+      const caption = (document.getElementById('imageCaption').value||'').trim();
+      if(!file){ alert('कृपया इमेज चुनें'); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const j = { id: nextJokeId(), type:'image', image: reader.result, caption, status:'pending', likes:0, shares:0, createdAt: Date.now(), author: user.name||'User' };
+        jokes.push(j); persistJokes();
+        document.getElementById('jokeImage').value='';
+        document.getElementById('imageCaption').value='';
+        alert('Image joke submitted for approval');
+        showSection('home');
+        renderAdminTables();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // --------- FEED RENDER + ACTIONS ---------
+    function renderJokes(){
+      const box = document.getElementById('jokesList');
+      box.innerHTML = '';
+      const approved = jokes.filter(j=>j.status==='approved').sort((a,b)=>b.createdAt-a.createdAt);
+      if(!approved.length){ box.innerHTML = '<p class="opacity-80">अभी कोई approved जोक नहीं है</p>'; return; }
+      approved.forEach(j=>{
+        const wrap = document.createElement('div');
+        wrap.className = 'card-premium';
+        const liked = likedOnce.includes(j.id);
+        const shared = sharedOnce.includes(j.id);
+        wrap.innerHTML = `
+          <div class='mb-2'>
+            <div class='text-xs opacity-80 mb-1'>By: ${j.author||'User'}</div>
+            ${j.type==='text' ? `<p class='text-base whitespace-pre-wrap'>${j.text}</p>` : `<img src='${j.image}' alt='joke' class='rounded-xl mb-2 max-h-80 object-contain'/>${j.caption?`<p>${j.caption}</p>`:''}`}
+          </div>
+          <div class="mt-2 flex gap-2 flex-wrap items-center text-sm">
+            <button class="btn-premium ${liked? 'bg-gray-500':'bg-pink-600'}" ${liked?'disabled':''} onclick="likeJoke(${j.id})">❤️ ${liked? 'Liked':'Like'}</button>
+            <button class="btn-premium ${shared? 'bg-gray-500':'bg-blue-600'}" ${shared?'disabled':''} onclick="shareJoke(${j.id})">🔗 ${shared? 'Shared':'Share'}</button>
+            <span class="opacity-80 ml-auto">👍 ${j.likes||0} • 🔁 ${j.shares||0}</span>
+          </div>`;
+        box.appendChild(wrap);
+      });
+    }
+
+    function likeJoke(id){
+      ensureDailyReset();
+      const j = jokes.find(x=>x.id===id && x.status==='approved');
+      if(!j) return;
+      if(likedOnce.includes(id)) { alert('यह जोक पहले ही like कर चुके हैं'); return; }
+      if(user.likeCount >= adminLimits.likeLimit){ alert('Daily like limit पूरी हो चुकी है'); return; }
+      likedOnce.push(id); persistLiked();
+      user.likeCount += 1; user.points += (adminLimits.coinPerLike||0); persistUser();
+      j.likes = (j.likes||0)+1; persistJokes();
+      updateWallet(); renderJokes();
+    }
+
+    function shareJoke(id){
+      ensureDailyReset();
+      const j = jokes.find(x=>x.id===id && x.status==='approved');
+      if(!j) return;
+      if(sharedOnce.includes(id)) { alert('यह जोक पहले ही share कर चुके हैं'); return; }
+      if(user.shareCount >= adminLimits.shareLimit){ alert('Daily share limit पूरी हो चुकी है'); return; }
+      sharedOnce.push(id); persistShared();
+      user.shareCount += 1; user.points += (adminLimits.coinPerShare||0); persistUser();
+      j.shares = (j.shares||0)+1; persistJokes();
+      updateWallet(); renderJokes();
+      // WhatsApp share text
+      const shareText = j.type==='text' ? j.text : (j.caption || 'ये जोक देखो!');
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`,'_blank');
+    }
+
+    // --------- PROFILE ---------
+    function renderProfile(){ document.getElementById('userName').value = user.name || ''; }
+    function saveProfile(){ user.name = (document.getElementById('userName').value||'').trim(); persistUser(); alert('प्रोफ़ाइल सेव हो गया'); updateWallet(); }
+
+    // --------- WALLET + WITHDRAW ---------
+    function updateWallet(){
+      document.getElementById("profileDisplay").innerText = user.name ? `👤 User: ${user.name}` : "👤 User: (No name set)";
+      document.getElementById("pointsDisplay").innerText = `Balance: ${user.points} coins`;
+      document.getElementById("inrDisplay").innerText = `INR: ₹${user.points}`; // 1 coin = ₹1 (simple)
+      document.getElementById("dailyLimits").innerText = `आज Like: ${user.likeCount}/${adminLimits.likeLimit} • Share: ${user.shareCount}/${adminLimits.shareLimit}`;
+    }
+
+    function requestWithdraw() {
+      const upi = (document.getElementById("upiId").value||'').trim();
+      const amount = parseInt(document.getElementById("withdrawAmount").value||'0');
+      if (!upi || !amount || amount<=0) return alert("कृपया सही डिटेल डालें");
+      if (amount > user.points) return alert("इतना balance नहीं है");
+      const req = { id: (withdrawals.length? Math.max(...withdrawals.map(r=>r.id||0)) : 0)+1, name: user.name||'User', upi, amount, status: "Pending", createdAt: Date.now() };
+      withdrawals.push(req);
+      localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+      showWithdrawals();
+      alert("Request Submitted");
+    }
+
+    function showWithdrawals() {
+      // user view
+      const list = document.getElementById("withdrawList");
+      list.innerHTML = withdrawals.slice().reverse().map(w => `<div class='glass rounded-xl p-2 mb-2 text-sm'><div class='flex justify-between'><span>ID: ${w.id}</span><span>${new Date(w.createdAt).toLocaleString()}</span></div><div>${w.name}: ₹${w.amount} — <b>${w.status}</b></div></div>`).join("");
+      // admin view
+      const pending = document.getElementById("pendingWithdrawals");
+      if (pending) pending.innerHTML = withdrawals.slice().reverse().map(w => `
+        <tr>
+          <td>${w.id}</td><td>${w.name||'User'}</td><td>${w.upi}</td><td>₹${w.amount}</td><td>${w.status}</td>
+          <td>${w.status==='Pending' ? `
+            <button class='btn-premium bg-green-600' onclick='approveWithdraw(${w.id})'>Approve</button>
+            <button class='btn-premium bg-red-600' onclick='rejectWithdraw(${w.id})'>Reject</button>` : '—'}</td>
+        </tr>`).join("");
+    }
+
+    function approveWithdraw(id) {
+      const w = withdrawals.find(x => x.id===id);
+      if (!w || w.status !== 'Pending') return;
+      if (user.name === w.name) {
+        if (user.points < w.amount) { alert('User balance कम है'); return; }
+        user.points -= w.amount; persistUser(); updateWallet();
+      }
+      w.status = "Approved"; localStorage.setItem("withdrawals", JSON.stringify(withdrawals)); showWithdrawals();
+    }
+    function rejectWithdraw(id) {
+      const w = withdrawals.find(x => x.id===id);
+      if (!w || w.status !== 'Pending') return;
+      w.status = "Rejected"; localStorage.setItem("withdrawals", JSON.stringify(withdrawals)); showWithdrawals();
+    }
+
+    // --------- ADMIN: PENDING JOKES ---------
+    function renderAdminTables(){
+      // jokes
+      const tb = document.getElementById('pendingJokes');
+      tb.innerHTML = '';
+      const pend = jokes.filter(j=>j.status==='pending');
+      if(!pend.length){ tb.innerHTML = `<tr><td colspan='5' class='opacity-70 p-2'>No pending jokes</td></tr>`; }
+      pend.forEach(j=>{
+        const content = j.type==='text' ? (j.text||'') : (j.caption||'[image]');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${j.id}</td>
+          <td>${j.type}</td>
+          <td class='max-w-[260px] truncate' title='${content.replace(/'/g,"\'")}' >${content}</td>
+          <td>${j.status}</td>
+          <td>
+            <button class='btn-premium bg-green-600' onclick='approveJoke(${j.id})'>Approve</button>
+            <button class='btn-premium bg-red-600' onclick='rejectJoke(${j.id})'>Reject</button>
+          </td>`;
+        tb.appendChild(tr);
+      });
+      // withdrawals
+      showWithdrawals();
+    }
+
+    function approveJoke(id){ const j = jokes.find(x=>x.id===id); if(!j) return; j.status='approved'; persistJokes(); renderAdminTables(); renderJokes(); }
+    function rejectJoke(id){ const j = jokes.find(x=>x.id===id); if(!j) return; j.status='rejected'; persistJokes(); renderAdminTables(); }
+
+    // --------- INIT ---------
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedUser = localStorage.getItem("user");
+      if(savedUser) user = JSON.parse(savedUser);
+      ensureDailyReset();
+      updateWallet();
+      renderJokes();
+      showWithdrawals();
+      showSection('home');
+    });
+
+    // --------- LIGHT TESTS (console) ---------
+    (function tests(){
+      const results = [];
+      function t(name, fn){ try{ fn(); results.push({name, ok:true}); } catch(e){ console.error('Test failed:', name, e); results.push({name, ok:false, err:String(e)});} }
+      t('showSection exists', ()=>{ if(typeof showSection!== 'function') throw 'missing'; });
+      t('submitImageJoke exists', ()=>{ if(typeof submitImageJoke!== 'function') throw 'missing'; });
+      t('submitJoke exists', ()=>{ if(typeof submitJoke!== 'function') throw 'missing'; });
+      t('like/share exist', ()=>{ if(typeof likeJoke!== 'function' || typeof shareJoke!== 'function') throw 'missing'; });
+      t('admin tables render', ()=>{ if(typeof renderAdminTables!== 'function') throw 'missing'; });
+      console.log('%cSelf-tests', 'color:#0f0', results);
+    })();
+  </script>
+</body>
+</html>
